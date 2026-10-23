@@ -60,6 +60,12 @@ const Ic = {
       <polyline points="18 15 12 9 6 15" />
     </svg>
   ),
+  Pip: (p) => (
+    <svg {...p} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+      <rect x="11" y="9" width="9" height="6" rx="1" ry="1" fill="currentColor" fillOpacity="0.2" />
+    </svg>
+  ),
 };
 
 // ─── Spinning Vinyl Disc (mini) ───────────────────────────────────────────────
@@ -157,6 +163,8 @@ export default function MiniPlayer({
   onVolumeChange,
   onMuteToggle,
   onDismiss,
+  onTogglePip,
+  isPipActive = false,
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [showVol, setShowVol] = useState(false);
@@ -221,8 +229,25 @@ export default function MiniPlayer({
           </div>
         </div>
 
-        {/* Action buttons: collapse + close */}
+        {/* Action buttons: pip + collapse + close */}
         <div className="flex items-center gap-0.5 flex-shrink-0">
+          {onTogglePip && (
+            <button
+              onClick={onTogglePip}
+              className={`p-1 rounded-md transition-colors ${
+                isPipActive
+                  ? 'text-emerald-400 bg-emerald-950/50'
+                  : 'text-zinc-500 hover:text-emerald-400 hover:bg-zinc-700/50'
+              }`}
+              title={
+                isPipActive
+                  ? 'Tutup Pop-out Desktop'
+                  : 'Pop-out ke Desktop (Tetap melayang saat Chrome di-minimize)'
+              }
+            >
+              <Ic.Pip className="w-3.5 h-3.5" />
+            </button>
+          )}
           <button
             onClick={() => setCollapsed((v) => !v)}
             className="p-1 rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700/50 transition-colors"

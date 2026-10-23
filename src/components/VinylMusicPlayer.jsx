@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MiniPlayer from './MiniPlayer';
+import DesktopPipWindow from './DesktopPipWindow';
 
 // Clean, precise inline SVG icons
 const Icons = {
@@ -81,6 +82,12 @@ const Icons = {
     <svg {...props} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  ),
+  Pip: (props) => (
+    <svg {...props} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+      <rect x="11" y="9" width="9" height="6" rx="1" ry="1" fill="currentColor" fillOpacity="0.2" />
     </svg>
   )
 };
@@ -223,7 +230,17 @@ export default function VinylMusicPlayer({
   onTrackChange = null,
   externalIsPlaying = null,
   onTogglePlay = null
-}) {  // Playlist State stored in localStorage
+}) {
+  // Detect Chrome Extension context (not available in Vite dev server)
+  const isChromeExt = typeof chrome !== 'undefined' && !!chrome.runtime?.sendMessage;
+
+  // Helper: safely send to background without crashing in dev mode
+  const toBackground = (msg) => {
+    if (!isChromeExt) return;
+    chrome.runtime.sendMessage(msg).catch(() => {});
+  };
+
+  // Playlist State stored in localStorage
   const [playlist, setPlaylist] = useState(() => {
     const saved = localStorage.getItem('dt_vinyl_playlist_v2');
     if (saved) {
@@ -267,6 +284,10 @@ export default function VinylMusicPlayer({
   const [playbackSeconds, setPlaybackSeconds] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
   const [showMiniPlayer, setShowMiniPlayer] = useState(true);
+  const [pipWindow, setPipWindow] = useState(null);
+  const [autoDesktopPip, setAutoDesktopPip] = useState(() => {
+    return localStorage.getItem('dt_auto_desktop_pip') === 'true';
+  });
 
   const formatTimer = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -622,6 +643,9 @@ export default function VinylMusicPlayer({
       stopPlayback();
     } else {
       startPlayback();
+      if (autoDesktopPip && !pipWindow) {
+        toggleDocumentPip();
+      }
     }
     if (onTogglePlay) onTogglePlay(!isPlaying);
   };
@@ -633,6 +657,9 @@ export default function VinylMusicPlayer({
     setPlaybackSeconds(0);
     setCurrentTrackIndex(index);
     startPlayback(track);
+    if (autoDesktopPip && !pipWindow) {
+      toggleDocumentPip();
+    }
   };
 
   const handlePrevTrack = () => {
@@ -794,6 +821,176 @@ export default function VinylMusicPlayer({
       setPlaybackSeconds(Math.floor(newTime));
     }
   };
+
+  // ── Desktop Picture-in-Picture: Always-on-top window on Windows desktop ────
+  const toggleDocumentPip = async () => {
+    if (pipWindow) {
+      try {
+        pipWindow.close();
+      } catch (e) {}
+      setPipWindow(null);
+      return;
+    }
+
+    if ('documentPictureInPicture' in window) {
+      try {
+        const pip = await window.documentPictureInPicture.requestWindow({
+          width: 330,
+          height: 150,
+        });
+
+        // Copy styles into PiP window
+        [...document.styleSheets].forEach((styleSheet) => {
+          try {
+            if (styleSheet.href) {
+              const link = pip.document.createElement('link');
+              link.rel = 'stylesheet';
+              link.type = styleSheet.type;
+              link.media = styleSheet.media;
+              link.href = styleSheet.href;
+              pip.document.head.appendChild(link);
+            } else if (styleSheet.cssRules) {
+              const style = pip.document.createElement('style');
+              [...styleSheet.cssRules].forEach((rule) => {
+                style.appendChild(pip.document.createTextNode(rule.cssText));
+              });
+              pip.document.head.appendChild(style);
+            }
+          } catch (e) {}
+        });
+
+        pip.document.body.style.margin = '0';
+        pip.document.body.style.padding = '0';
+        pip.document.body.style.background = '#09090b';
+
+        pip.addEventListener('pagehide', () => {
+          setPipWindow(null);
+        });
+
+        setPipWindow(pip);
+      } catch (err) {
+        console.warn('Document PiP request failed:', err);
+      }
+    } else {
+      alert(language === 'id'
+        ? 'Fitur pop-out always-on-top desktop memerlukan Google Chrome versi 116 ke atas.'
+        : 'Desktop pop-out always-on-top requires Chrome 116 or higher.');
+    }
+  };
+
+  const toggleAutoDesktopPip = () => {
+    setAutoDesktopPip((prev) => {
+      const next = !prev;
+      localStorage.setItem('dt_auto_desktop_pip', String(next));
+      if (next && !pipWindow) {
+        toggleDocumentPip();
+      }
+      return next;
+    });
+  };
+
+  // ── Cross-tab: ref keeps command handler fresh (avoids stale closures) ─────
+  const cmdHandlerRef = useRef(null);
+  useEffect(() => {
+    cmdHandlerRef.current = {
+      togglePlay, handlePrevTrack, handleNextTrack,
+      handleVolumeChange, toggleMute, handleSeek, toggleDocumentPip,
+    };
+  });
+
+  // ── Cross-tab: broadcast player state to background service worker & storage ─
+  useEffect(() => {
+    const progress = audioDuration > 0 ? playbackSeconds / audioDuration : 0;
+    const payload = {
+      isPlaying,
+      track: { title: activeTrack?.title || '', artist: activeTrack?.artist || '' },
+      volume,
+      isMuted,
+      progress,
+      currentTime: playbackSeconds,
+      duration: audioDuration,
+      updatedAt: Date.now()
+    };
+    if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+      try {
+        chrome.storage.local.set({ dt_player_state: payload });
+      } catch (e) {}
+    }
+    toBackground({
+      type: 'MP_STATE_UPDATE',
+      payload,
+    });
+  }, [isPlaying, activeTrack, volume, isMuted, playbackSeconds, audioDuration]);
+
+  // ── Cross-tab: listen for commands forwarded from content scripts ──────────
+  useEffect(() => {
+    const executeCommand = (cmd, payload) => {
+      const h = cmdHandlerRef.current;
+      if (!h) return;
+      switch (cmd) {
+        case 'PLAY_PAUSE':  h.togglePlay(); break;
+        case 'PREV':        h.handlePrevTrack(); break;
+        case 'NEXT':        h.handleNextTrack(); break;
+        case 'VOLUME':      h.handleVolumeChange(payload?.volume ?? 70); break;
+        case 'MUTE_TOGGLE': h.toggleMute(); break;
+        case 'SEEK':        h.handleSeek(payload?.progress ?? 0); break;
+        case 'TOGGLE_PIP':  h.toggleDocumentPip(); break;
+        default: break;
+      }
+    };
+
+    if (isChromeExt) {
+      const listener = (msg, sender, sendResponse) => {
+        if (msg.type !== 'MP_CMD') return;
+        executeCommand(msg.cmd, msg.payload);
+        sendResponse({ ok: true });
+        return false;
+      };
+      chrome.runtime.onMessage.addListener(listener);
+
+      // Storage-based command listener (failsafe if background service worker slept)
+      const storageListener = (changes, area) => {
+        if (area === 'local' && changes.dt_player_cmd?.newValue) {
+          const cmdObj = changes.dt_player_cmd.newValue;
+          executeCommand(cmdObj.cmd, cmdObj.payload);
+        }
+      };
+      if (chrome.storage?.onChanged) {
+        chrome.storage.onChanged.addListener(storageListener);
+      }
+
+      return () => {
+        chrome.runtime.onMessage.removeListener(listener);
+        if (chrome.storage?.onChanged) {
+          chrome.storage.onChanged.removeListener(storageListener);
+        }
+      };
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Media Session API: OS media controls + prevents throttle on minimize ───
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title:  activeTrack?.title  || 'Music',
+      artist: activeTrack?.artist || 'Dev Workspace Player',
+      album:  'Dev Workspace Player',
+    });
+    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+  }, [activeTrack, isPlaying]);
+
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+    navigator.mediaSession.setActionHandler('play',          () => { if (!isPlaying) startPlayback(); });
+    navigator.mediaSession.setActionHandler('pause',         () => { if (isPlaying)  stopPlayback(); });
+    navigator.mediaSession.setActionHandler('previoustrack', () => handlePrevTrack());
+    navigator.mediaSession.setActionHandler('nexttrack',     () => handleNextTrack());
+    return () => {
+      ['play', 'pause', 'previoustrack', 'nexttrack'].forEach((a) => {
+        try { navigator.mediaSession.setActionHandler(a, null); } catch (_) {}
+      });
+    };
+  }, [isPlaying]);
 
   useEffect(() => {
     return () => {
@@ -977,6 +1174,23 @@ export default function VinylMusicPlayer({
               title={`Volume: ${isMuted ? 0 : volume}%`}
             />
           </div>
+
+          {/* Tombol Pop-out Desktop (Melayang di atas semua aplikasi saat Chrome di-minimize) */}
+          <button
+            onClick={toggleDocumentPip}
+            className={`p-1.5 rounded-lg text-xs transition flex items-center border ${
+              pipWindow
+                ? 'bg-emerald-950/70 text-emerald-300 border-emerald-500/50'
+                : 'bg-zinc-950/80 hover:bg-zinc-850 text-zinc-400 hover:text-emerald-400 border-zinc-800'
+            }`}
+            title={
+              language === 'id'
+                ? 'Pop-out ke Desktop (Melayang di atas semua aplikasi & saat Chrome di-minimize)'
+                : 'Pop-out to Desktop (Floats over all apps when Chrome is minimized)'
+            }
+          >
+            <Icons.Pip className="w-3.5 h-3.5" />
+          </button>
 
         </div>
 
@@ -1225,6 +1439,28 @@ export default function VinylMusicPlayer({
           onVolumeChange={handleVolumeChange}
           onMuteToggle={toggleMute}
           onDismiss={() => setShowMiniPlayer(false)}
+          onTogglePip={toggleDocumentPip}
+          isPipActive={!!pipWindow}
+        />
+      )}
+
+      {/* ── Desktop Picture-in-Picture Window (melayang di desktop saat Chrome di-minimize) ── */}
+      {pipWindow && (
+        <DesktopPipWindow
+          pipWindow={pipWindow}
+          isPlaying={isPlaying}
+          track={activeTrack}
+          progress={seekProgress}
+          duration={audioDuration}
+          currentTime={playbackSeconds}
+          volume={volume}
+          isMuted={isMuted}
+          onPlayPause={togglePlay}
+          onPrev={handlePrevTrack}
+          onNext={handleNextTrack}
+          onSeek={handleSeek}
+          onVolumeChange={handleVolumeChange}
+          onMuteToggle={toggleMute}
         />
       )}
     </>

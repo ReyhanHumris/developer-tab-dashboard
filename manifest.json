@@ -1,16 +1,30 @@
 {
   "manifest_version": 3,
   "name": "Dev Workspace & Prayer Times Ende",
-  "version": "1.0.0",
-  "description": "Custom Chrome New Tab Extension untuk Fullstack Developer dilengkapi tabel Jadwal Sholat Ende, Multi-Engine Search, Kurs USD/IDR, dan Dev Tools.",
+  "version": "1.2.0",
+  "description": "Custom Chrome New Tab Extension untuk Fullstack Developer dilengkapi tabel Jadwal Sholat Ende, Multi-Engine Search, Kurs USD/IDR, Floating Cross-tab Mini Music Player, dan Dev Tools.",
+  "permissions": [
+    "tabs",
+    "storage",
+    "scripting"
+  ],
   "host_permissions": [
-    "https://api.aladhan.com/*",
-    "https://open.er-api.com/*",
-    "http://127.0.0.1/*"
+    "<all_urls>"
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
   },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content-script.js"],
+      "run_at": "document_end",
+      "all_frames": false
+    }
+  ],
   "web_accessible_resources": [
     {
       "resources": ["assets/*"],
