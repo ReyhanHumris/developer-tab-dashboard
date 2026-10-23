@@ -1,0 +1,481 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #09090b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+.backdrop-noise {
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 0),
+    radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.1), transparent 48%),
+    radial-gradient(ellipse at 100% 40%, rgba(99, 102, 241, 0.07), transparent 36%);
+  background-size: 24px 24px, auto, auto;
+}
+
+body {
+  background: #09090b;
+}
+
+button,
+select,
+input {
+  transition-property: color, background-color, border-color, box-shadow, opacity;
+  transition-duration: 160ms;
+}
+
+.app-shell > header {
+  border-color: rgba(63, 63, 70, 0.72);
+}
+
+.header-tools {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.workspace-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 224px;
+  align-items: start;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.workspace-links {
+  min-width: 0;
+}
+
+.workspace-toolbar {
+  min-height: 42px;
+}
+
+.shortcut-filter,
+.shortcut-category {
+  height: 32px;
+  border: 1px solid rgba(63, 63, 70, 0.9);
+  border-radius: 0.6rem;
+  background: rgba(24, 24, 27, 0.9);
+  color: #d4d4d8;
+}
+
+.shortcut-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0 0.6rem;
+}
+
+.shortcut-filter:focus-within,
+.shortcut-category:focus {
+  border-color: rgba(52, 211, 153, 0.65);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+  outline: none;
+}
+
+.shortcut-filter input {
+  width: 132px;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #f4f4f5;
+  font-size: 11px;
+}
+
+.shortcut-filter input::placeholder {
+  color: #71717a;
+}
+
+.shortcut-category {
+  max-width: 145px;
+  padding: 0 0.45rem;
+  font-size: 11px;
+  outline: none;
+}
+
+.shortcut-category option,
+.prayer-city-select option {
+  background: #18181b;
+  color: #f4f4f5;
+}
+
+.shortcut-icon {
+  position: relative;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(113, 113, 122, 0.3);
+  border-radius: 0.5rem;
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.18), rgba(99, 102, 241, 0.2));
+  color: #d4d4d8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.shortcut-icon-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.shortcut-icon img {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: #18181b;
+  object-fit: contain;
+  padding: 4px;
+}
+
+.prayer-widget {
+  position: sticky;
+  top: 1rem;
+  overflow: hidden;
+  border: 1px solid rgba(63, 63, 70, 0.85);
+  border-radius: 1rem;
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(16, 185, 129, 0.11), transparent 55%),
+    rgba(24, 24, 27, 0.92);
+  padding: 0.85rem;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+}
+
+.prayer-widget-heading,
+.prayer-widget-title,
+.prayer-widget-footer,
+.prayer-next {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.prayer-widget-title {
+  justify-content: flex-start;
+  gap: 0.45rem;
+  color: #f4f4f5;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.prayer-widget-heading p {
+  margin: 0.25rem 0 0;
+  color: #a1a1aa;
+  font-size: 10px;
+}
+
+.prayer-live-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #34d399;
+  box-shadow: 0 0 12px rgba(52, 211, 153, 0.7);
+}
+
+.prayer-city-select {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+  border: 1px solid rgba(63, 63, 70, 0.7);
+  border-radius: 0.55rem;
+  background: rgba(9, 9, 11, 0.6);
+  padding: 0.4rem 0.5rem;
+  color: #a1a1aa;
+  font-size: 10px;
+}
+
+.prayer-city-select select {
+  max-width: 125px;
+  border: 0;
+  background: transparent;
+  color: #e4e4e7;
+  font-size: 10px;
+  outline: none;
+}
+
+.prayer-next {
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  border-radius: 0.55rem;
+  background: rgba(16, 185, 129, 0.11);
+  padding: 0.45rem 0.55rem;
+  color: #a7f3d0;
+  font-size: 10px;
+}
+
+.prayer-next strong {
+  color: #6ee7b7;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.prayer-times-table {
+  width: 100%;
+  margin-top: 0.45rem;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.prayer-times-table tr {
+  border-bottom: 1px solid rgba(63, 63, 70, 0.42);
+}
+
+.prayer-times-table tr:last-child {
+  border-bottom: 0;
+}
+
+.prayer-times-table th,
+.prayer-times-table td {
+  padding: 0.34rem 0.2rem;
+}
+
+.prayer-times-table th {
+  color: #a1a1aa;
+  font-weight: 500;
+  text-align: left;
+}
+
+.prayer-times-table td {
+  color: #e4e4e7;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.prayer-times-table tr.is-next th,
+.prayer-times-table tr.is-next td {
+  color: #6ee7b7;
+  font-weight: 700;
+}
+
+.prayer-widget-footer {
+  gap: 0.4rem;
+  margin-top: 0.45rem;
+  color: #71717a;
+  font-size: 9px;
+}
+
+.prayer-widget-footer button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 0.4rem;
+  padding: 0.25rem 0.35rem;
+  color: #a1a1aa;
+  font-size: 9px;
+}
+
+.prayer-widget-footer button:hover {
+  background: rgba(63, 63, 70, 0.5);
+  color: #e4e4e7;
+}
+
+@media (max-width: 1023px) {
+  .workspace-layout {
+    grid-template-columns: minmax(0, 1fr) 210px;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .workspace-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .prayer-widget {
+    position: static;
+    width: 100%;
+    max-width: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .header-tools {
+    justify-content: flex-start;
+  }
+
+  .workspace-toolbar > div:last-child {
+    width: 100%;
+  }
+
+  .shortcut-filter {
+    flex: 1;
+  }
+
+  .shortcut-filter input {
+    width: 100%;
+  }
+
+  .shortcut-category {
+    max-width: 120px;
+  }
+}
+
+/* --- VINYL TURNTABLE & AUDIO VISUALIZER ANIMATIONS --- */
+@keyframes vinyl-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.vinyl-disc {
+  background:
+    radial-gradient(circle, transparent 28%, rgba(255, 255, 255, 0.05) 29%, transparent 30%),
+    radial-gradient(circle, transparent 38%, rgba(255, 255, 255, 0.04) 39%, transparent 40%),
+    radial-gradient(circle, transparent 48%, rgba(255, 255, 255, 0.05) 49%, transparent 50%),
+    radial-gradient(circle, transparent 58%, rgba(255, 255, 255, 0.04) 59%, transparent 60%),
+    radial-gradient(circle, transparent 68%, rgba(255, 255, 255, 0.05) 69%, transparent 70%),
+    radial-gradient(circle, transparent 78%, rgba(255, 255, 255, 0.04) 79%, transparent 80%),
+    radial-gradient(circle, transparent 88%, rgba(255, 255, 255, 0.05) 89%, transparent 90%),
+    conic-gradient(
+      from 0deg,
+      rgba(255, 255, 255, 0.12) 0deg,
+      transparent 60deg,
+      rgba(255, 255, 255, 0.14) 120deg,
+      transparent 180deg,
+      rgba(255, 255, 255, 0.12) 240deg,
+      transparent 300deg,
+      rgba(255, 255, 255, 0.14) 360deg
+    ),
+    #121214;
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 15px 35px -5px rgba(0, 0, 0, 0.7),
+    inset 0 0 25px rgba(0, 0, 0, 0.9);
+}
+
+.vinyl-spinning {
+  animation: vinyl-spin 3.2s linear infinite;
+}
+
+.vinyl-paused {
+  animation: vinyl-spin 3.2s linear infinite;
+  animation-play-state: paused;
+}
+
+/* Tonearm Animation */
+.tonearm {
+  transform-origin: 24px 24px;
+  transition: transform 0.85s cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+
+.tonearm-playing {
+  transform: rotate(26deg);
+}
+
+.tonearm-paused {
+  transform: rotate(0deg);
+}
+
+/* Audio Visualizer Wave Bars */
+@keyframes bar-wave {
+  0%, 100% {
+    height: 18%;
+  }
+  50% {
+    height: 92%;
+  }
+}
+
+.visualizer-bar-animated {
+  animation: bar-wave 0.8s ease-in-out infinite alternate;
+}
+
+/* Glow pulse animation for music playing */
+@keyframes pulse-aura {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.04);
+  }
+}
+
+.pulse-glow-aura {
+  animation: pulse-aura 2.4s ease-in-out infinite;
+}
+
+/* Tag tab pills */
+.tag-tab-pill {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.tag-tab-pill:hover {
+  transform: translateY(-1px);
+}
+.tag-tab-pill:active {
+  transform: translateY(0);
+}
+
+
+/* ─── MiniPlayer ──────────────────────────────────────────────────────────── */
+@keyframes mini-player-bar-slide {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+/* Volume slider webkit styling */
+.mini-player-vol-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 3px;
+  border-radius: 999px;
+  background: #3f3f46;
+  outline: none;
+}
+.mini-player-vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #10b981;
+  cursor: pointer;
+  box-shadow: 0 0 4px rgba(16, 185, 129, 0.5);
+}
+.mini-player-vol-slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #10b981;
+  cursor: pointer;
+  border: none;
+}
+
+/* Slide-up entrance animation */
+@keyframes mini-player-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
